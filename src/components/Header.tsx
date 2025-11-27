@@ -3,9 +3,10 @@ import { Menu, Search, Video, Bell, User } from 'lucide-react';
 interface HeaderProps {
   onMenuClick: () => void;
   onSearch: (query: string) => void;
+  onMobileSearchClick?: () => void;
 }
 
-export function Header({ onMenuClick, onSearch }: HeaderProps) {
+export function Header({ onMenuClick, onSearch, onMobileSearchClick }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 z-50">
       <div className="flex items-center justify-between h-full px-4">
@@ -52,7 +53,11 @@ export function Header({ onMenuClick, onSearch }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden" aria-label="Search">
+          <button
+            onClick={onMobileSearchClick}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden"
+            aria-label="Search"
+          >
             <Search size={20} />
           </button>
           <button className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden sm:block" aria-label="Notifications">

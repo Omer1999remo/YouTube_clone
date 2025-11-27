@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown, Share2, MoreHorizontal } from 'lucide-react';
 import { Video, Comment, supabase } from '../lib/supabase';
 import { formatDistanceToNow } from '../utils/formatters';
+import { RelatedVideos } from './RelatedVideos';
+import { CommentForm } from './CommentForm';
 
 interface VideoPlayerProps {
   video: Video & { channels: { name: string; avatar_url: string; handle: string; subscriber_count: number } };
   onBack: () => void;
+  relatedVideos?: (Video & { channels: { name: string; avatar_url: string } })[];
+  onVideoClick?: (video: Video & { channels: { name: string; avatar_url: string; handle: string; subscriber_count: number } }) => void;
 }
 
-export function VideoPlayer({ video, onBack }: VideoPlayerProps) {
+export function VideoPlayer({ video, onBack, relatedVideos = [], onVideoClick }: VideoPlayerProps) {
   const [comments, setComments] = useState<(Comment & { channels: { name: string; avatar_url: string } })[]>([]);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
@@ -26,6 +30,10 @@ export function VideoPlayer({ video, onBack }: VideoPlayerProps) {
     if (data) {
       setComments(data as (Comment & { channels: { name: string; avatar_url: string } })[]);
     }
+  };
+
+  const handleCommentSubmit = async (content: string) => {
+    console.log('Comment submitted:', content);
   };
 
   const formatViews = (views: number) => {
@@ -121,6 +129,8 @@ export function VideoPlayer({ video, onBack }: VideoPlayerProps) {
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-4">{comments.length} Comments</h2>
 
+            <CommentForm onSubmit={handleCommentSubmit} />
+
             <div className="space-y-4">
               {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
@@ -156,9 +166,13 @@ export function VideoPlayer({ video, onBack }: VideoPlayerProps) {
 
         <div className="lg:col-span-1">
           <h2 className="font-semibold mb-3">Related Videos</h2>
-          <div className="space-y-2">
-            <p className="text-sm text-gray-600">Related videos would appear here</p>
-          </div>
+          {relatedVideos.length > 0 && onVideoClick ? (
+            <RelatedVideos videos={relatedVideos} onVideoClick={onVideoClick} />
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">No related videos available</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
