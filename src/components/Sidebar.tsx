@@ -1,15 +1,27 @@
-import { Home, TrendingUp, Clock, ThumbsUp, Film, Gamepad2, Newspaper, Trophy, Lightbulb, Music } from 'lucide-react';
+import { useState } from 'react';
+import { Home, TrendingUp, Clock, ThumbsUp, Film, Gamepad2, Newspaper, Trophy, Lightbulb, Music, Users } from 'lucide-react';
+
+type Page = 'home' | 'trending' | 'history' | 'subscriptions' | 'liked' | 'channel';
 
 interface SidebarProps {
   isOpen: boolean;
+  onNavigate: (page: Page) => void;
 }
 
-export function Sidebar({ isOpen }: SidebarProps) {
+export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
+  const [activePage, setActivePage] = useState<Page>('home');
+
+  const handleClick = (page: Page) => {
+    setActivePage(page);
+    onNavigate(page);
+  };
+
   const mainLinks = [
-    { icon: Home, label: 'Home', active: true },
-    { icon: TrendingUp, label: 'Trending' },
-    { icon: Clock, label: 'History' },
-    { icon: ThumbsUp, label: 'Liked Videos' },
+    { icon: Home, label: 'Home', page: 'home' as Page },
+    { icon: TrendingUp, label: 'Trending', page: 'trending' as Page },
+    { icon: Users, label: 'Subscriptions', page: 'subscriptions' as Page },
+    { icon: Clock, label: 'History', page: 'history' as Page },
+    { icon: ThumbsUp, label: 'Liked Videos', page: 'liked' as Page },
   ];
 
   const categories = [
@@ -33,8 +45,9 @@ export function Sidebar({ isOpen }: SidebarProps) {
             {mainLinks.map((link) => (
               <button
                 key={link.label}
+                onClick={() => handleClick(link.page)}
                 className={`w-full flex items-center gap-6 px-6 py-3 hover:bg-gray-100 transition-colors ${
-                  link.active ? 'bg-gray-100' : ''
+                  activePage === link.page ? 'bg-gray-100' : ''
                 }`}
               >
                 <link.icon size={20} />

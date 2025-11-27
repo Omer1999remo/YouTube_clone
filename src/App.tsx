@@ -7,6 +7,11 @@ import { CategoryBar } from './components/CategoryBar';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorMessage } from './components/ErrorMessage';
 import { MobileSearch } from './components/MobileSearch';
+import { ChannelPage } from './pages/ChannelPage';
+import { TrendingPage } from './pages/TrendingPage';
+import { HistoryPage } from './pages/HistoryPage';
+import { SubscriptionsPage } from './pages/SubscriptionsPage';
+import { LikedVideosPage } from './pages/LikedVideosPage';
 import { supabase, Video } from './lib/supabase';
 
 type VideoWithChannel = Video & {
@@ -18,6 +23,8 @@ type VideoWithChannel = Video & {
   };
 };
 
+type Page = 'home' | 'trending' | 'history' | 'subscriptions' | 'liked' | 'channel';
+
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [videos, setVideos] = useState<VideoWithChannel[]>([]);
@@ -28,6 +35,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
 
   useEffect(() => {
     loadVideos();
@@ -76,9 +85,22 @@ function App() {
 
   const handleVideoClick = (video: VideoWithChannel) => {
     setSelectedVideo(video);
+    setCurrentPage('home');
   };
 
   const handleBack = () => {
+    setSelectedVideo(null);
+  };
+
+  const handleNavigate = (page: Page) => {
+    setCurrentPage(page);
+    setSelectedVideo(null);
+    setSearchQuery('');
+  };
+
+  const handleChannelClick = (channelId: string) => {
+    setSelectedChannelId(channelId);
+    setCurrentPage('channel');
     setSelectedVideo(null);
   };
 
@@ -99,7 +121,7 @@ function App() {
         onSearch={handleSearch}
         onMobileSearchClick={() => setShowMobileSearch(true)}
       />
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onNavigate={handleNavigate} />
 
       {showMobileSearch && (
         <MobileSearch
@@ -113,34 +135,55 @@ function App() {
           sidebarOpen ? 'md:ml-60' : 'md:ml-20'
         } ml-0`}
       >
-        {!selectedVideo && <CategoryBar onCategoryChange={handleCategoryChange} />}
+        {!selectedVideo && currentPage === 'home' && (
+          <CategoryBar onCategoryChange={handleCategoryChange} />
+        )}
 
         <div className="p-6">
-          {loading ? (
-            <LoadingSpinner size="lg" message="Loading videos..." />
-          ) : error ? (
-            <ErrorMessage message={error} onRetry={loadVideos} />
-          ) : selectedVideo ? (
+          {selectedVideo ? (
             <VideoPlayer
               video={selectedVideo}
               onBack={handleBack}
               relatedVideos={videos.filter(v => v.id !== selectedVideo.id).slice(0, 10)}
               onVideoClick={handleVideoClick}
             />
-          ) : filteredVideos.length > 0 ? (
-            <>
-              {searchQuery && (
-                <h2 className="text-xl font-bold mb-4">
-                  Search results for "{searchQuery}"
-                </h2>
-              )}
-              <VideoGrid videos={filteredVideos} onVideoClick={handleVideoClick} />
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-600">No videos found</p>
-            </div>
-          )}
+          ) : currentPage === 'home' ? (
+            loading ? (
+              <LoadingSpinner size="lg" message="Loading videos..." />
+            ) : error ? (
+              <ErrorMessage message={error} onRetry={loadVideos} />
+            ) : filteredVideos.length > 0 ? (
+              <>
+                {searchQuery && (
+                  <h2 className="text-xl font-bold mb-4">
+                    Search results for "{searchQuery}"
+                  </h2>
+                )}
+                <VideoGrid videos={filteredVideos} onVideoClick={handleVideoClick} />
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-gray-600">No videos found</p>
+              </div>
+            )
+          ) : currentPage === 'trending' ? (
+            <TrendingPage onVideoClick={handleVideoClick} />
+          ) : currentPage === 'history' ? (
+            <HistoryPage onVideoClick={handleVideoClick} />
+          ) : currentPage === 'subscriptions' ? (
+            <SubscriptionsPage
+              onVideoClick={handleVideoClick}
+              onChannelClick={handleChannelClick}
+            />
+          ) : currentPage === 'liked' ? (
+            <LikedVideosPage onVideoClick={handleVideoClick} />
+          ) : currentPage === 'channel' && selectedChannelId ? (
+            <ChannelPage
+              channelId={selectedChannelId}
+              onVideoClick={handleVideoClick}
+              onBack={() => setCurrentPage('home')}
+            />
+          ) : null}
         </div>
       </main>
     </div>
